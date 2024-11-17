@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
+import 'package:flutter/services.dart'; // Import for Clipboard functionality
 import 'dart:io';
 
 class ImageToTextConverter extends StatefulWidget {
@@ -72,11 +73,44 @@ class _ImageToTextConverterState extends State<ImageToTextConverter> {
     }
   }
 
+  // Function to copy text to clipboard
+  void _copyToClipboard() {
+    if (_extractedText.isNotEmpty) {
+      Clipboard.setData(ClipboardData(text: _extractedText));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Copied to clipboard!")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Image to Text Converter"),
+        backgroundColor: const Color(0xFFe84132),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Row(
+          children: [
+            Icon(Icons.document_scanner),
+            SizedBox(width: 8,),
+            Text(
+              'TextLens ||||||||||||||||||||||||||||||',
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+        actions: [
+          if (_selectedImage != null)
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _selectedImage = null;
+                  _extractedText = "";
+                });
+              },
+              icon: const Icon(Icons.clear),
+            ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -85,42 +119,112 @@ class _ImageToTextConverterState extends State<ImageToTextConverter> {
           children: [
             // Display selected image or a placeholder
             _selectedImage == null
-                ? Placeholder(
-              fallbackHeight: 200,
-            )
-                : Image.file(
-              _selectedImage!,
+                ? Container(
+              alignment: Alignment.center,
+              width: MediaQuery.of(context).size.width,
               height: 200,
-              fit: BoxFit.cover,
+              color: Colors.black12,
+              child: const Text(
+                'Pick an image.. or Capture',
+                style: TextStyle(color: Colors.grey),
+              ),
+            )
+                : Expanded(
+              child: ListView(
+                children: [
+                  Image.file(
+                    _selectedImage!,
+                    height: 600,
+                    fit: BoxFit.cover,
+                  ),
+                ],
+              ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             // Buttons for selecting or capturing an image
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton.icon(
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(Colors.red),
+                  ),
                   onPressed: _pickImage,
-                  icon: Icon(Icons.image),
-                  label: Text("Pick Image"),
+                  icon: const Icon(
+                    Icons.image,
+                    color: Colors.white,
+                  ),
+                  label: const Text(
+                    'Pick Image',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
                 ElevatedButton.icon(
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(Colors.red),
+                  ),
                   onPressed: _captureImage,
-                  icon: Icon(Icons.camera_alt),
-                  label: Text("Capture Image"),
+                  icon: const Icon(
+                    Icons.camera_alt,
+                    color: Colors.white,
+                  ),
+                  label: const Text(
+                    'Capture Image',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             // Show a loading indicator while processing
             _isProcessing
-                ? Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator())
                 : Expanded(
               child: SingleChildScrollView(
-                child: Text(
-                  _extractedText.isEmpty
-                      ? "Extracted text will appear here."
-                      : _extractedText,
-                  style: TextStyle(fontSize: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (_extractedText.isNotEmpty)
+                      Align(
+                        alignment: Alignment.center,
+                        child: SizedBox(
+                          height: 34,
+                          child: ElevatedButton.icon(
+                            style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all(Colors.grey),
+                            ),
+                            onPressed: _copyToClipboard,
+                            icon: const Icon(Icons.copy, color: Colors.white),
+                            label: const Text(
+                              "Copy Text",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ),
+                    _extractedText.isEmpty
+                        ? Container(
+                      padding: const EdgeInsets.all(5),
+                      height: MediaQuery.of(context).size.height,
+                      width: MediaQuery.of(context).size.width,
+                      color: Colors.black12,
+                          child: const Text(
+                            "Extracted text will appear here.",
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        )
+                        : SelectableText(
+                      _extractedText,
+                      style: const TextStyle(fontSize: 16),
+                      toolbarOptions: const ToolbarOptions(
+                        copy: true,
+                        selectAll: true,
+                      ),
+                      showCursor: true,
+                      cursorColor: Colors.redAccent,
+                      cursorWidth: 2,
+                    ),
+                  ],
                 ),
               ),
             ),

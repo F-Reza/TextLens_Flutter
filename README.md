@@ -4,6 +4,8 @@ A new Flutter project TextLens Image to text converter app.
 
 ## Getting Started
 
+<img src="https://github.com/F-Reza/TextLens_Flutter/blob/main/Untitled-0.png" width="100%"> 
+
 This project is a starting point for a Flutter application.
 
 A few resources to get you started if this is your first Flutter project:
